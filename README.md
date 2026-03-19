@@ -1,4 +1,4 @@
-# SecureShop - PKI-Based Secure E-Commerce System with Digital Signatures and Payment Gateway
+# SecureShop - PKI-Based Secure E-Commerce System
 
 A full-stack experimental e-commerce system built to demonstrate real-world application of **Public Key Infrastructure (PKI)**, **RSA-2048 cryptography**, **digital signatures**, and **JWT-based authentication**. The payment flow is simulated; the cryptographic protocols are fully implemented.
 
@@ -10,6 +10,7 @@ A full-stack experimental e-commerce system built to demonstrate real-world appl
 
 - [Project Overview](#project-overview)
 - [Tech Stack](#tech-stack)
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Roles & Responsibilities](#roles--responsibilities)
 - [Module Flows](#module-flows)
@@ -48,11 +49,16 @@ project/
 │   ├── app.js
 │   └── style.css
 ├── database/               # SQLite databases (auto-created on first run)
-│   ├── ecommerce.db
-│   ├── ca.db
-│   └── gateway.db
+│   └── .gitkeep            # keeps the folder tracked by Git; .db files are gitignored
+├── screenshots/
+│   ├── landing.png
+│   ├── merchant_page.png 
+│   ├── place_order.png
+│   └── revoke_cert.png
 ├── .env.example            # Template committed to version control
-└── .gitignore
+├── .gitignore
+├── README.md
+└── LICENSE
 ```
 
 **Core security mechanisms implemented:**
@@ -60,7 +66,7 @@ project/
 - **PKI**: A self-hosted Certificate Authority (CA) issues, stores, and revokes X.509-style certificates for all participants - customers, merchants, and the payment gateway.
 - **RSA-2048**: Used for digital signatures (order integrity) and asymmetric encryption (payment info confidentiality via RSA-OAEP).
 - **Browser-side key generation**: RSA key pairs are generated locally in the browser via the Web Crypto API. The private key never leaves the browser.
-- **JWT(JSON Web Token)**: Stateless session tokens for API authentication, with role-based access control.
+- **JWT (JSON Web Token)**: Stateless session tokens for API authentication, with role-based access control.
 - **Inter-service authentication**: The payment gateway authenticates itself to the main server using its CA-issued certificate and a PKI signature - no shared API keys.
 - **Anti-replay**: UUID nonces on orders, one-time CAPTCHA consumption, and 60-second challenge expiry on key-based login.
 - **Payment signature binding**: The customer's payment signature covers `order_id`, `amount`, and `nonce` - preventing signature reuse across different payments.
@@ -78,6 +84,22 @@ project/
 | Crypto | RSA-2048 · PKCS1v15 signatures · RSA-OAEP encryption · SHA-256 |
 | Auth | JWT (HS256) · CAPTCHA · Challenge-Response |
 | Config | `python-dotenv` for environment variable management |
+
+---
+
+## Screenshots
+
+![Landing Page](screenshots/landing.png)
+*Landing page (login or register)*
+
+![Place Order](screenshots/place_order.png)
+*Complete 4-step order and payment flow*
+
+![Revoke & Re-issue Certificate](screenshots/revoke_cert.png)
+*Certificate revocation and re-issuance with automatic .pem download*
+
+![Merchant Dashboard](screenshots/merchant_page.png)
+*Merchant Dashboard with product and order listings*
 
 ---
 
@@ -346,7 +368,7 @@ CAPTCHA codes are stored as `captcha:{session_id}` with a 5-minute TTL and delet
 | Certificate validity | 1-year expiry; expiry and revocation checked on every sensitive operation |
 
 **Known limitations (by design):**
-- Payment processing is always simulated as successful, because The focus of the payment module is cryptographic security, not banking integration.
+- Payment is simulated and always succeeds (no real bank involved); the focus is cryptographic security, not banking integration.
 - Password hashing uses SHA-256 without salt; a production system should use bcrypt or Argon2.
 - The challenge store is in-memory and does not survive server restarts.
 
@@ -364,14 +386,9 @@ Redis must be running locally on port 6379.
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and fill in your secret key:
-
-```bash
-cp .env.example .env
-```
-
-`.env.example`:
-```
+Rename `.env.example` to `.env` and fill in your secret key. 
+The template looks like this:
+```env
 SECRET_KEY=replace_with_a_strong_random_string
 ```
 
@@ -393,6 +410,7 @@ python main.py
 Then open `http://localhost:8100` in your browser.
 
 > The CA server must be started first. The payment gateway registers its certificate with the CA on startup.
+> The `database/` directory is included but empty. All three `.db` files are created automatically when the servers start for the first time.
 
 ---
 
